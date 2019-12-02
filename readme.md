@@ -1,6 +1,6 @@
 # minigrep
 
-A simple grep tool written in Rust.
+A minimal grep tool written in Rust.
 
 ## Usage
 
