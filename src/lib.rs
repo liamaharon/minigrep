@@ -41,7 +41,7 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
   results
 }
 
-#[cfg(tests)]
+#[cfg(test)]
 mod tests {
   use super::search;
 
