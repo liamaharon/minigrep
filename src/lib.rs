@@ -1,6 +1,6 @@
+use std::env;
 use std::error::Error;
 use std::fs;
-use std::env;
 
 pub struct Config {
   pub query: String,
@@ -9,16 +9,27 @@ pub struct Config {
 }
 
 impl Config {
-  pub fn new(args: &[String]) -> Result<Config, &'static str> {
-    if args.len() < 3 {
-      return Err("not enough arguments");
-    }
+  pub fn new(mut args: std::env::Args) -> Result<Config, &'static str> {
+    // Ignore first item, which is name of the program
+    args.next();
 
-    let query = args[1].clone();
-    let filename = args[2].clone();
+    let query = match args.next() {
+      Some(q) => q,
+      None => return Err("Did not receive a 'query' param"),
+    };
+
+    let filename = match args.next() {
+      Some(f) => f,
+      None => return Err("Did not receive a 'filename' param"),
+    };
+
     let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
 
-    Ok(Config { query, filename, case_sensitive })
+    Ok(Config {
+      query,
+      filename,
+      case_sensitive,
+    })
   }
 }
 
@@ -39,27 +50,14 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 }
 
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-  let mut results = Vec::new();
-
-  for line in contents.lines() {
-    if line.contains(query) {
-      results.push(line);
-    }
-  }
-
-  results
+  contents.lines().filter(|l| l.contains(query)).collect()
 }
 
 pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-  let mut results = Vec::new();
-
-  for line in contents.lines() {
-    if line.to_lowercase().contains(&query.to_lowercase()) {
-      results.push(line);
-    }
-  }
-
-  results
+  contents
+    .lines()
+    .filter(|l| l.to_lowercase().contains(&query.to_lowercase()))
+    .collect()
 }
 
 #[cfg(test)]
@@ -86,7 +84,7 @@ safe, fast, productive.
 Pick three.";
 
     assert_eq!(
-      vec!["safe, fast, productive."], 
+      vec!["safe, fast, productive."],
       search_case_insensitive(query, contents)
     );
   }
